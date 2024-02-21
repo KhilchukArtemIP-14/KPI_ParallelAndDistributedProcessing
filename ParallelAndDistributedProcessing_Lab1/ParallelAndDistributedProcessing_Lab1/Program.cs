@@ -73,7 +73,7 @@ public class Program
             var config = DefaultConfig.Instance;
             BenchmarkRunner.Run<EquationsCalculationsBenchmarks>(config, args);
         }
-        Console.WriteLine("Fetching data from file...");
+        /*Console.WriteLine("Fetching data from file...");
         var manager = new DataManager();
 
         Input data=manager.GetDataFromFile("data.json");
@@ -87,6 +87,6 @@ public class Program
         Console.WriteLine("Done! Now proceeding to calculations ...");
 
         var calculator = new MultithreadEquationCalulator(new MultiThreadMatrixCalculator());
-        calculator.Calculate(data, "results.txt");
+        calculator.Calculate(data, "results.txt");*/
     }
 }

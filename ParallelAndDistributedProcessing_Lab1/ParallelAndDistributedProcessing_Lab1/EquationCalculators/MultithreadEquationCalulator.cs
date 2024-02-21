@@ -11,6 +11,8 @@ namespace ParallelAndDistributedCalculations_Lab1.EquationCalculators
 {
     public class MultithreadEquationCalulator : IEquationCalulator
     {
+        private static readonly object _lock = new object(); // Define a lock object
+
         private IMatrixCalculator _calculator;
         public MultithreadEquationCalulator(IMatrixCalculator calculator)
         {
@@ -18,11 +20,16 @@ namespace ParallelAndDistributedCalculations_Lab1.EquationCalculators
         }
         public void Calculate(Input input, string outputFilePath)
         {
-            using (StreamWriter writer = new StreamWriter(outputFilePath))
+            if(File.Exists(outputFilePath))
             {
+                File.Delete(outputFilePath);
+            }
+            //using (StreamWriter writer = new StreamWriter(outputFilePath))
+            //{
                 Matrix<decimal> APlusC = null;
                 decimal maxAPlusC = 0m;
                 Matrix<decimal> maxAPlusCxMB = null;
+
                 Matrix<decimal> maxAPlusCxMBxMT = null;
                 Matrix<decimal> MZxME = null;
                 Matrix<decimal> MZxMExa = null;
@@ -35,58 +42,64 @@ namespace ParallelAndDistributedCalculations_Lab1.EquationCalculators
                 var maxAPlusCxMBxMTJob = Task.Run(() =>
                 {
                     APlusC = _calculator.Add(input.A, input.C);
+                    //OutputMessage(outputFilePath,$"A + C =\n{APlusC}\n");
                     maxAPlusC = APlusC.Max;
+                    //OutputMessage(outputFilePath, $"max(A + C) =\n{maxAPlusC}\n");
+
                     maxAPlusCxMB = _calculator.MultiplyByScalar(input.MB, maxAPlusC);
+                    //OutputMessage(outputFilePath, $"max(A + C) * MB =\n{maxAPlusCxMB}\n");
+
                     maxAPlusCxMBxMT = _calculator.MultiplyByMatrix(maxAPlusCxMB, input.MT);
+                    //OutputMessage(outputFilePath,$"max(A + C) * MB * MT =\n{maxAPlusCxMBxMT}\n");
+
                 });
 
                 var MZxMExaJob = Task.Run(() =>
                 {
                     MZxME = _calculator.MultiplyByMatrix(input.MZ, input.ME);
+                    //OutputMessage(outputFilePath, $"MZ * ME =\n{MZxME}\n");
+
+
                     MZxMExa = _calculator.MultiplyByScalar(MZxME, input.a);
+                    //OutputMessage(outputFilePath, $"MZ * ME * a =\n{MZxMExa}\n");
                 });
 
                 var AxMBJob = Task.Run(() =>
                 {
                     AxMB = _calculator.MultiplyByMatrix(input.A, input.MB);
+                    //OutputMessage(outputFilePath, $"A * MB =\n{AxMB}\n");
                 });
 
                 var minCxCJob = Task.Run(() =>
                 {
                     minC = input.C.Max;
+                    //OutputMessage(outputFilePath, $"min(C) =\n{minC}\n");
+
                     minCxC = _calculator.MultiplyByScalar(input.C, minC);
+                    //OutputMessage(outputFilePath, $"min(C) * C =\n{minCxC}\n");
                 });
 
                 Task.WaitAll(maxAPlusCxMBxMTJob, MZxMExaJob, AxMBJob, minCxCJob);
 
                 MG = _calculator.Substract(maxAPlusCxMBxMT, MZxMExa);
+                //OutputMessage(outputFilePath, $"MG =\n{MG}");
+                //Console.WriteLine($"MG =\n{MG}\n");
+
                 X = _calculator.Substract(AxMB, minCxC);
-
-                writer.WriteLine($"A + C =\n{APlusC}\n");
-                writer.WriteLine($"max(A + C) =\n{maxAPlusC}\n");
-                writer.WriteLine($"max(A + C)*MB =\n{maxAPlusCxMB}\n");
-                writer.WriteLine($"max(A + C) * MB * MT =\n{maxAPlusCxMBxMT}\n");
-                writer.WriteLine($"MZ * ME =\n{MZxME}\n");
-                writer.WriteLine($"MZ * ME * a =\n{MZxMExa}\n");
-                writer.WriteLine($"MG =\n{MG}\n");
-                writer.WriteLine($"A * MB =\n{AxMB}\n");
-                writer.WriteLine($"min(C) =\n{minC}\n");
-                writer.WriteLine($"min(C) * C =\n{minCxC}\n");
-                writer.WriteLine($"X =\n{X}\n");
-
-                Console.WriteLine($"A + C =\n{APlusC}");
-                Console.WriteLine($"max(A + C) =\n{maxAPlusC}");
-                Console.WriteLine($"max(A + C)*MB =\n{maxAPlusCxMB}");
-                Console.WriteLine($"max(A + C) * MB * MT =\n{maxAPlusCxMBxMT}");
-                Console.WriteLine($"MZ * ME =\n{MZxME}");
-                Console.WriteLine($"MZ * ME * a =\n{MZxMExa}");
-                Console.WriteLine($"MG =\n{MG}");
-                Console.WriteLine($"A * MB =\n{AxMB}");
-                Console.WriteLine($"min(C) =\n{minC}");
-                Console.WriteLine($"min(C) * C =\n{minCxC}");
-                Console.WriteLine($"X =\n{X}");
+                //OutputMessage(outputFilePath, $"X =\n{X}");
+                //Console.WriteLine($"X =\n{X}\n");
+            //}
+        }
+        private void OutputMessage(string path, string output)
+        {
+            lock (_lock)
+            {
+                Console.WriteLine(output);
+                using(StreamWriter sw = new StreamWriter(path, true))
+                {
+                    sw.WriteLine(output);
+                }
             }
-
         }
     }
 }
