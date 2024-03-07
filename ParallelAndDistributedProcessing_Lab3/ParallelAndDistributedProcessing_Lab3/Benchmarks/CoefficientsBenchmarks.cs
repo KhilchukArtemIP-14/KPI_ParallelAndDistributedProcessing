@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 
 namespace ParallelAndDistributedProcessing_Lab3.Benchmarks
 {
-    //[MaxIterationCount(16)]
     public class CoefficientsBenchmarks
     {
         private Input _data;

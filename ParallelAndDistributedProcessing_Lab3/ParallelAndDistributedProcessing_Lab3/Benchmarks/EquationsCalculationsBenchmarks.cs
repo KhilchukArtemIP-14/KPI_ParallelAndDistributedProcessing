@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 
 namespace ParallelAndDistributedCalculations_Lab1.Benchmarks
 {
-    [MaxIterationCount(16)]
     public class EquationsCalculationsBenchmarks
     {
         private Input _data;
